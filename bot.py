@@ -308,16 +308,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                             keyboard_to_send = InlineKeyboardMarkup([[update_button]])
                         else:
                             user_facing_message = f"⚠️ Error from helper script: {message_from_fwd[:200]}"
+                    # This message is only a status update, not the final success message. This part is OK.
                     elif "count_sent_to_bot" in response_json:
                         sent_to_bot = response_json["count_sent_to_bot"]
                         total_found = response_json.get("total_found", sent_to_bot) 
                         if total_found == 0:
-                            user_facing_message = f"ℹ️ No messages found by helper for '{current_button_label}'."
-                            task_data = context.bot_data.get(task_key, {})
-                            task_data["_explicitly_zero_expected_and_handled_by_button_handler"] = True
-                            context.bot_data[task_key] = task_data
+                            user_facing_message = f"ℹ️ No messages found for '{current_button_label}'."
                         else:
-                            user_facing_message = f"Script has initiated transfer. Thanks for your patience "
+                            user_facing_message = f"Transfer for '{current_button_label}' initiated. Please wait for all items to arrive..."
                     else: 
                         user_facing_message = f"Helper script status: {message_from_fwd}"
             except json.JSONDecodeError:
@@ -329,11 +327,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             
             status_msg_id_fwd = context.bot_data[task_key].get('status_message_id')
             status_chat_id_fwd = context.bot_data[task_key].get('status_chat_id')
-            if status_msg_id_fwd and status_chat_id_fwd:
-                try: await context.bot.edit_message_text(chat_id=status_chat_id_fwd, message_id=status_msg_id_fwd, text=user_facing_message, reply_markup=keyboard_to_send)
-                except TelegramError: await context.bot.send_message(chat_id=end_user_chat_id, text=user_facing_message, reply_markup=keyboard_to_send)
-            else: # Fallback if somehow message ID wasn't tracked
-                await context.bot.send_message(chat_id=end_user_chat_id, text=user_facing_message, reply_markup=keyboard_to_send)
+            # Don't edit if the message already indicates no items were found.
+            # The control messages will handle the final status edit.
+            if "No messages found" not in user_facing_message:
+                if status_msg_id_fwd and status_chat_id_fwd:
+                    try: await context.bot.edit_message_text(chat_id=status_chat_id_fwd, message_id=status_msg_id_fwd, text=user_facing_message, reply_markup=keyboard_to_send)
+                    except TelegramError: await context.bot.send_message(chat_id=end_user_chat_id, text=user_facing_message, reply_markup=keyboard_to_send)
+                else: # Fallback if somehow message ID wasn't tracked
+                    await context.bot.send_message(chat_id=end_user_chat_id, text=user_facing_message, reply_markup=keyboard_to_send)
 
 
         except subprocess.TimeoutExpired:
@@ -390,12 +391,52 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         except TelegramError:
              await context.bot.send_message(chat_id=end_user_chat_id, text="⚠️ Unknown action type.")
 
+async def finalize_task(context: ContextTypes.DEFAULT_TYPE, task_key: str):
+    """Sends the final completion message and cleans up task data."""
+    if task_key not in context.bot_data:
+        return
+
+    task = context.bot_data[task_key]
+    button_label = task.get('last_button_label', 'the requested content')
+    requester_chat_id = task.get('requester_chat_id')
+    status_message_id = task.get('status_message_id')
+    status_chat_id = task.get('status_chat_id')
+    final_count = task.get('final_count_from_forwarder', 0)
+    
+    final_message_text = "Sent successfully ✅"
+
+    if final_count == 0:
+        final_message_text = f"ℹ️ No items were found for '{button_label}'."
+
+    if status_message_id and status_chat_id:
+        try:
+            await context.bot.edit_message_text(
+                text=final_message_text,
+                chat_id=status_chat_id,
+                message_id=status_message_id,
+                reply_markup=None
+            )
+            logger.info(f"Edited status message for completed task {task_key}")
+        except TelegramError as e:
+            logger.warning(f"Could not edit status message for {task_key}, sending new one. Error: {e}")
+            if requester_chat_id:
+                await context.bot.send_message(chat_id=requester_chat_id, text=final_message_text)
+    elif requester_chat_id:
+        await context.bot.send_message(chat_id=requester_chat_id, text=final_message_text)
+
+    # Cleanup
+    if task_key in context.bot_data:
+        del context.bot_data[task_key]
+    if requester_chat_id and f"last_button_for_{requester_chat_id}" in context.bot_data:
+        del context.bot_data[f"last_button_for_{requester_chat_id}"]
+    logger.info(f"Cleaned up data for task {task_key}.")
+
+
 async def xercese_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.message
     text = message.text
     
     logger.info(f"Bot received message from Xercese: '{text[:100] if text else '<NoText_LikelyMedia>'}'")
-    requester_chat_id_from_text = None # Initialize
 
     if text and (text.startswith("CONTROL_TASK_START:") or text.startswith("CONTROL_TASK_END:")):
         try:
@@ -404,77 +445,38 @@ async def xercese_message_handler(update: Update, context: ContextTypes.DEFAULT_
                 logger.error(f"Invalid CONTROL message format: {text}")
                 return
             control_type = parts[0]
-            requester_chat_id_from_text = int(parts[1]) # Used for task_key and logging
-            payload_value = int(parts[2]) # expected_items or forwarded_by_xercese
+            requester_chat_id_from_text = int(parts[1])
+            payload_value = int(parts[2])
             task_key = f"forward_task_{requester_chat_id_from_text}"
 
             if control_type == "CONTROL_TASK_START":
-                expected_items = payload_value
-                button_label_for_task = context.bot_data.get(f"last_button_for_{requester_chat_id_from_text}", "the requested content")
-                
-                # Get status_message_id and chat_id if already set by button_handler
                 status_msg_id = context.bot_data.get(task_key, {}).get('status_message_id')
                 status_chat_id = context.bot_data.get(task_key, {}).get('status_chat_id')
 
                 context.bot_data[task_key] = {
                     'requester_chat_id': requester_chat_id_from_text,
-                    'expected_items': expected_items,
+                    'expected_items': payload_value,
                     'relayed_count': 0,
-                    'last_button_label': button_label_for_task,
-                    '_completed_message_sent_by_relay': False,
-                    'status_message_id': status_msg_id, # Preserve if already set
-                    'status_chat_id': status_chat_id    # Preserve if already set
+                    'last_button_label': context.bot_data.get(f"last_button_for_{requester_chat_id_from_text}", "the requested content"),
+                    'status_message_id': status_msg_id,
+                    'status_chat_id': status_chat_id,
+                    'control_end_received': False,
+                    'final_count_from_forwarder': -1,
                 }
-                if expected_items > 0:
-                    logger.info(f"Initialized/Updated task via CONTROL_START for {requester_chat_id_from_text} ('{button_label_for_task}'): Expecting {expected_items} items.")
-                else: # expected_items == 0
-                    logger.info(f"Initialized/Updated task via CONTROL_START for {requester_chat_id_from_text} ('{button_label_for_task}'): Expecting 0 items.")
+                logger.info(f"Initialized task {task_key} via CONTROL_START: Expecting {payload_value} items.")
                 return
 
             elif control_type == "CONTROL_TASK_END":
-                forwarded_by_xercese = payload_value
                 if task_key in context.bot_data:
                     task = context.bot_data[task_key]
-                    button_label = task.get('last_button_label', 'the content') 
-                    relayed_count_by_bot = task.get('relayed_count',0)
-                    initial_expected_items = task.get('expected_items', 0) 
-                    completion_message_sent_by_relay = task.get('_completed_message_sent_by_relay', False)
-                    status_message_id = task.get('status_message_id')
-                    status_chat_id = task.get('status_chat_id', requester_chat_id_from_text) # Fallback to current requester if not found
-
-                    logger.info(f"Received CONTROL_TASK_END for {requester_chat_id_from_text} ('{button_label}'). Xercese forwarded {forwarded_by_xercese}. Bot relayed {relayed_count_by_bot}. Initial expected: {initial_expected_items}.")
+                    task['control_end_received'] = True
+                    task['final_count_from_forwarder'] = payload_value
                     
-                    final_message_text = None
+                    logger.info(f"Received CONTROL_END for {task_key}. Final count is {payload_value}. Bot has relayed {task.get('relayed_count', 0)}.")
 
-                    if initial_expected_items == 0 and forwarded_by_xercese == 0:
-                        if not task.get("_explicitly_zero_expected_and_handled_by_button_handler"):
-                            final_message_text = f"✅ Task for '{button_label}' complete (no items processed)."
-                    elif relayed_count_by_bot == forwarded_by_xercese and relayed_count_by_bot == initial_expected_items:
-                        if not completion_message_sent_by_relay: # If relay loop didn't already send final msg
-                           final_message_text = f"✅ All items for '{button_label}' have been sent."
-                    elif relayed_count_by_bot == forwarded_by_xercese:
-                        final_message_text = f"ℹ️ Task for '{button_label}' finished. {relayed_count_by_bot} items processed. (Initially expected {initial_expected_items})"
-                    else:
-                        final_message_text = f"Sent successfully ✅"
-
-                    if final_message_text and status_message_id and status_chat_id:
-                        try:
-                            await context.bot.edit_message_text(
-                                text=final_message_text,
-                                chat_id=status_chat_id,
-                                message_id=status_message_id,
-                                reply_markup=None 
-                            )
-                            logger.info(f"Edited status message {status_message_id} to final status: '{final_message_text}'")
-                        except TelegramError as e_edit_status:
-                            logger.warning(f"Could not edit final status message {status_message_id}: {e_edit_status}. Sending new.")
-                            await context.bot.send_message(chat_id=requester_chat_id_from_text, text=final_message_text)
-                    elif final_message_text: # Fallback if no status_message_id
-                         await context.bot.send_message(chat_id=requester_chat_id_from_text, text=final_message_text)
-                    
-                    del context.bot_data[task_key] 
-                    if f"last_button_for_{requester_chat_id_from_text}" in context.bot_data:
-                        del context.bot_data[f"last_button_for_{requester_chat_id_from_text}"] 
+                    if task.get('relayed_count', 0) >= payload_value:
+                        logger.info(f"Task {task_key} already complete on CONTROL_END receipt. Finalizing.")
+                        await finalize_task(context, task_key)
                 else:
                     logger.warning(f"Received CONTROL_TASK_END for {requester_chat_id_from_text} but no active task found.")
                 return
@@ -488,35 +490,23 @@ async def xercese_message_handler(update: Update, context: ContextTypes.DEFAULT_
     
     for t_key, t_val in context.bot_data.items():
         if t_key.startswith("forward_task_") and isinstance(t_val, dict):
-            if t_val.get("expected_items", 0) > t_val.get("relayed_count", 0) or t_val.get("expected_items",0) == 0: 
+            final_count = t_val.get('final_count_from_forwarder', -1)
+            is_complete = t_val.get('control_end_received') and final_count != -1 and t_val.get('relayed_count', 0) >= final_count
+            if not is_complete:
                 task_info_for_relay = t_val
                 active_task_key_found = t_key
-                break 
-    
-    if not task_info_for_relay:
-        for t_key, t_val in context.bot_data.items():
-            if t_key.startswith("forward_task_") and isinstance(t_val, dict):
-                task_info_for_relay = t_val
-                active_task_key_found = t_key
-                logger.warning(f"Relaying to a task {active_task_key_found} that was not actively expecting based on counts, or waiting for CONTROL_END.")
                 break
 
     if not task_info_for_relay:
-        logger.warning(f"Bot received content from Xercese but no suitable active task found. Ignoring message. Text: '{text[:50] if text else '<Media>'}'")
+        logger.warning(f"Bot received content from Xercese but no suitable active task found. Ignoring. Text: '{text[:50] if text else '<Media>'}'")
         return
 
     requester_chat_id_for_relay = task_info_for_relay['requester_chat_id']
     button_label_for_relay = task_info_for_relay.get('last_button_label', 'content')
-    expected_items_for_relay = task_info_for_relay.get('expected_items', 0) 
-    relayed_so_far = task_info_for_relay.get('relayed_count', 0)
-
+    
     sent_item_by_bot = False
     try:
-        caption_to_use = None
-        if message.caption:
-            caption_to_use = message.caption
-        elif message.text and (message.video or message.document or message.photo or message.audio or message.voice):
-             caption_to_use = message.text
+        caption_to_use = message.caption
         
         if message.video:
             await context.bot.send_video(chat_id=requester_chat_id_for_relay, video=message.video.file_id, caption=caption_to_use)
@@ -540,25 +530,21 @@ async def xercese_message_handler(update: Update, context: ContextTypes.DEFAULT_
             logger.warning(f"Received message from Xercese with no standard content to relay: {message.to_dict()}")
         
         if sent_item_by_bot:
-            relayed_so_far += 1
-            task_info_for_relay['relayed_count'] = relayed_so_far
-            logger.info(f"Bot relayed item {relayed_so_far}/{expected_items_for_relay if expected_items_for_relay >= 0 else 'N/A'} for task '{button_label_for_relay}' (Key: {active_task_key_found}) to {requester_chat_id_for_relay}")
+            task_info_for_relay['relayed_count'] += 1
+            relayed_so_far = task_info_for_relay['relayed_count']
+            expected_total = task_info_for_relay.get('expected_items', 'N/A')
+            logger.info(f"Bot relayed item {relayed_so_far}/{expected_total} for task '{active_task_key_found}' to {requester_chat_id_for_relay}")
             
-            if expected_items_for_relay > 0 and relayed_so_far >= expected_items_for_relay:
-                if not task_info_for_relay.get('_completed_message_sent_by_relay'):
-                    completion_text = f"✅ All items for '{button_label_for_relay}' should have been sent."
-                    status_message_id = task_info_for_relay.get('status_message_id')
-                    status_chat_id = task_info_for_relay.get('status_chat_id', requester_chat_id_for_relay)
-                    if status_message_id and status_chat_id:
-                        try:
-                            await context.bot.edit_message_text(text=completion_text, chat_id=status_chat_id, message_id=status_message_id, reply_markup=None)
-                            logger.info(f"Edited status message for task '{button_label_for_relay}' on relay completion.")
-                        except TelegramError: # Fallback if edit fails
-                            await context.bot.send_message(chat_id=requester_chat_id_for_relay, text=completion_text)
-                    else: # No status message to edit, send new
-                         await context.bot.send_message(chat_id=requester_chat_id_for_relay, text=completion_text)
-                    task_info_for_relay['_completed_message_sent_by_relay'] = True 
+            # Wait AFTER sending each item
             await asyncio.sleep(DELAY_BOT_SEND)
+
+            # Check for completion AFTER the delay
+            is_end_signal_received = task_info_for_relay.get('control_end_received', False)
+            final_count = task_info_for_relay.get('final_count_from_forwarder', -1)
+
+            if is_end_signal_received and final_count != -1 and relayed_so_far >= final_count:
+                logger.info(f"Relay loop completed task {active_task_key_found}. Finalizing.")
+                await finalize_task(context, active_task_key_found)
 
     except TelegramError as e:
         logger.error(f"BOT_ERROR: Failed to relay message from Xercese to {requester_chat_id_for_relay}. Error: {e}")
