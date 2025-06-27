@@ -9,7 +9,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 from telegram.error import TelegramError
 
 # --- Configuration ---
-BOT_TOKEN = "8050233284:AAHyy5CwuIZo5_A7jIYEPgzTrmqd5G5bF5o"  # Your Bot Token
+BOT_TOKEN = "7581711594:AAEFEfbrt-2t5NBd_E-cdQMlMYzFF1mwmZI"  # Your Bot Token
 XERCESE_USER_ID = 7867584782      # Your (Xercese) User ID
 CONFIG_FILE = 'bot_config.json' # Updated config file name
 BOT_APP_CONFIG = {}             # Global variable to hold the loaded config
