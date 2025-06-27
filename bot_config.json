@@ -47,127 +47,237 @@
     "neet_y26_phy_sale_menu": [
       {
         "button_label": "Ch-01 : Basic Maths and Calculus",
-        "callback_data": "action:phy_sale_ch01_all_content"
+        "callback_data": "navigate:phy_sale_ch01_menu"
       },
       {
         "button_label": "Ch-02 : Vectors",
-        "callback_data": "action:phy_sale_ch02_all_content"
+        "callback_data": "navigate:phy_sale_ch02_menu"
       },
       {
         "button_label": "Ch-03 : Units and Dimensions",
-        "callback_data": "action:phy_sale_ch03_all_content"
+        "callback_data": "navigate:phy_sale_ch03_menu"
       },
       {
         "button_label": "⬅️ Back",
         "callback_data": "navigate:neet_pw_yakeen_2026_menu"
       }
+    ],
+    "phy_sale_ch01_menu": [
+      {"button_label": "Videos", "callback_data": "action:phy_sale_ch01_videos"},
+      {"button_label": "PDFs", "callback_data": "action:phy_sale_ch01_pdfs"},
+      {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_phy_sale_menu"}
+    ],
+    "phy_sale_ch02_menu": [
+      {"button_label": "Videos", "callback_data": "action:phy_sale_ch02_videos"},
+      {"button_label": "PDFs", "callback_data": "action:phy_sale_ch02_pdfs"},
+      {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_phy_sale_menu"}
+    ],
+    "phy_sale_ch03_menu": [
+      {"button_label": "Videos", "callback_data": "action:phy_sale_ch03_videos"},
+      {"button_label": "PDFs", "callback_data": "action:phy_sale_ch03_pdfs"},
+      {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_phy_sale_menu"}
     ],
     "neet_y26_bot_rupes_menu": [
       {
         "button_label": "Ch-01 : Cell - The Unit of Life",
-        "callback_data": "action:bot_rupes_ch01_all_content"
+        "callback_data": "navigate:bot_rupes_ch01_menu"
       },
       {
         "button_label": "Ch-02 : Cell Cycle and Division",
-        "callback_data": "action:bot_rupes_ch02_all_content"
+        "callback_data": "navigate:bot_rupes_ch02_menu"
       },
       {
         "button_label": "⬅️ Back",
         "callback_data": "navigate:neet_pw_yakeen_2026_menu"
       }
+    ],
+    "bot_rupes_ch01_menu": [
+        {"button_label": "Videos", "callback_data": "action:bot_rupes_ch01_videos"},
+        {"button_label": "PDFs", "callback_data": "action:bot_rupes_ch01_pdfs"},
+        {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_bot_rupes_menu"}
+    ],
+    "bot_rupes_ch02_menu": [
+        {"button_label": "Videos", "callback_data": "action:bot_rupes_ch02_videos"},
+        {"button_label": "PDFs", "callback_data": "action:bot_rupes_ch02_pdfs"},
+        {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_bot_rupes_menu"}
     ],
     "neet_y26_zoo_sama_menu": [
       {
         "button_label": "Ch-01 : Structural Organization in Animals",
-        "callback_data": "action:zoo_sama_ch01_all_content"
+        "callback_data": "navigate:zoo_sama_ch01_menu"
       },
       {
         "button_label": "Ch-02 : Breathing and Exchange of Gases",
-        "callback_data": "action:zoo_sama_ch02_all_content"
+        "callback_data": "navigate:zoo_sama_ch02_menu"
       },
       {
         "button_label": "⬅️ Back",
         "callback_data": "navigate:neet_pw_yakeen_2026_menu"
       }
     ],
+    "zoo_sama_ch01_menu": [
+        {"button_label": "Videos", "callback_data": "action:zoo_sama_ch01_videos"},
+        {"button_label": "PDFs", "callback_data": "action:zoo_sama_ch01_pdfs"},
+        {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_zoo_sama_menu"}
+    ],
+    "zoo_sama_ch02_menu": [
+        {"button_label": "Videos", "callback_data": "action:zoo_sama_ch02_videos"},
+        {"button_label": "PDFs", "callback_data": "action:zoo_sama_ch02_pdfs"},
+        {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_zoo_sama_menu"}
+    ],
     "neet_y26_pchem_sudhanshu_menu": [
       {
         "button_label": "Ch-01 : Some Basic Concept of Chemistry",
-        "callback_data": "action:pchem_sudhanshu_ch01_all_content"
+        "callback_data": "navigate:pchem_sudhanshu_ch01_menu"
       },
       {
         "button_label": "Ch-02 : Redox Reaction",
-        "callback_data": "action:pchem_sudhanshu_ch02_all_content"
+        "callback_data": "navigate:pchem_sudhanshu_ch02_menu"
       },
       {
         "button_label": "Ch-03 : Solutions",
-        "callback_data": "action:pchem_sudhanshu_ch03_all_content"
+        "callback_data": "navigate:pchem_sudhanshu_ch03_menu"
       },
       {
         "button_label": "Ch-04 : Thermodynamics and Thermochemistry",
-        "callback_data": "action:pchem_sudhanshu_ch04_all_content"
+        "callback_data": "navigate:pchem_sudhanshu_ch04_menu"
       },
       {
         "button_label": "⬅️ Back",
         "callback_data": "navigate:neet_pw_yakeen_2026_menu"
       }
+    ],
+    "pchem_sudhanshu_ch01_menu": [
+        {"button_label": "Videos", "callback_data": "action:pchem_sudhanshu_ch01_videos"},
+        {"button_label": "PDFs", "callback_data": "action:pchem_sudhanshu_ch01_pdfs"},
+        {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_pchem_sudhanshu_menu"}
+    ],
+    "pchem_sudhanshu_ch02_menu": [
+        {"button_label": "Videos", "callback_data": "action:pchem_sudhanshu_ch02_videos"},
+        {"button_label": "PDFs", "callback_data": "action:pchem_sudhanshu_ch02_pdfs"},
+        {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_pchem_sudhanshu_menu"}
+    ],
+    "pchem_sudhanshu_ch03_menu": [
+        {"button_label": "Videos", "callback_data": "action:pchem_sudhanshu_ch03_videos"},
+        {"button_label": "PDFs", "callback_data": "action:pchem_sudhanshu_ch03_pdfs"},
+        {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_pchem_sudhanshu_menu"}
+    ],
+    "pchem_sudhanshu_ch04_menu": [
+        {"button_label": "Videos", "callback_data": "action:pchem_sudhanshu_ch04_videos"},
+        {"button_label": "PDFs", "callback_data": "action:pchem_sudhanshu_ch04_pdfs"},
+        {"button_label": "⬅️ Back", "callback_data": "navigate:neet_y26_pchem_sudhanshu_menu"}
     ]
   },
   "actions": {
-    "phy_sale_ch01_all_content": {
-      "button_label": "Ch-01 : Basic Maths and Calculus",
+    "phy_sale_ch01_videos": {
+      "button_label": "Ch-01 : Basic Maths and Calculus - Videos",
       "private_channel_id": "https://t.me/+wH-zmtKDFow3ZDJl",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "phy_sale_ch02_all_content": {
-      "button_label": "Ch-02 : Vectors",
+    "phy_sale_ch01_pdfs": {
+      "button_label": "Ch-01 : Basic Maths and Calculus - PDFs",
+      "private_channel_id": "https://t.me/+IXyk_wyUB300OTZl",
+      "messages_identifier": "pdf"
+    },
+    "phy_sale_ch02_videos": {
+      "button_label": "Ch-02 : Vectors - Videos",
       "private_channel_id": "https://t.me/+Y5w65pTfiARhZjRl",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "phy_sale_ch03_all_content": {
-      "button_label": "Ch-03 : Units and Dimensions",
+    "phy_sale_ch02_pdfs": {
+      "button_label": "Ch-02 : Vectors - PDFs",
+      "private_channel_id": "https://t.me/+Q6k3rncc-g43NDll",
+      "messages_identifier": "pdf"
+    },
+    "phy_sale_ch03_videos": {
+      "button_label": "Ch-03 : Units and Dimensions - Videos",
       "private_channel_id": "https://t.me/+ZKefdP7tanQ5MGI9",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "bot_rupes_ch01_all_content": {
-      "button_label": "Ch-01 : Cell - The Unit of Life",
+    "phy_sale_ch03_pdfs": {
+      "button_label": "Ch-03 : Units and Dimensions - PDFs",
+      "private_channel_id": "https://t.me/+XEyEVxrDANViMTk1",
+      "messages_identifier": "pdf"
+    },
+    "bot_rupes_ch01_videos": {
+      "button_label": "Ch-01 : Cell - The Unit of Life - Videos",
       "private_channel_id": "https://t.me/+1wmo1Vo717FmZjJl",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "bot_rupes_ch02_all_content": {
-      "button_label": "Ch-02 : Cell Cycle and Division",
+    "bot_rupes_ch01_pdfs": {
+      "button_label": "Ch-01 : Cell - The Unit of Life - PDFs",
+      "private_channel_id": "https://t.me/+nFEl6p_Kuws5MGE9",
+      "messages_identifier": "pdf"
+    },
+    "bot_rupes_ch02_videos": {
+      "button_label": "Ch-02 : Cell Cycle and Division - Videos",
       "private_channel_id": "https://t.me/+Qo6D8wICeRIxZjM1",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "zoo_sama_ch01_all_content": {
-      "button_label": "Ch-01 : Structural Organization in Animals",
+    "bot_rupes_ch02_pdfs": {
+      "button_label": "Ch-02 : Cell Cycle and Division - PDFs",
+      "private_channel_id": "https://t.me/+qfBrYFWjlQQyNTFl",
+      "messages_identifier": "pdf"
+    },
+    "zoo_sama_ch01_videos": {
+      "button_label": "Ch-01 : Structural Organization in Animals - Videos",
       "private_channel_id": "https://t.me/+Jbm-rAKb1xk4MmE9",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "zoo_sama_ch02_all_content": {
-      "button_label": "Ch-02 : Breathing and Exchange of Gases",
+    "zoo_sama_ch01_pdfs": {
+      "button_label": "Ch-01 : Structural Organization in Animals - PDFs",
+      "private_channel_id": "https://t.me/+sdPS_4tENtllYmQ1",
+      "messages_identifier": "pdf"
+    },
+    "zoo_sama_ch02_videos": {
+      "button_label": "Ch-02 : Breathing and Exchange of Gases - Videos",
       "private_channel_id": "https://t.me/+TRlpIJ7qXAlhNmY1",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "pchem_sudhanshu_ch01_all_content": {
-      "button_label": "Ch-01 : Some Basic Concept of Chemistry",
+    "zoo_sama_ch02_pdfs": {
+      "button_label": "Ch-02 : Breathing and Exchange of Gases - PDFs",
+      "private_channel_id": "https://t.me/+WAJOVin6V-wwYjll",
+      "messages_identifier": "pdf"
+    },
+    "pchem_sudhanshu_ch01_videos": {
+      "button_label": "Ch-01 : Some Basic Concept of Chemistry - Videos",
       "private_channel_id": "https://t.me/+hVjzUm-2f-IwYzll",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "pchem_sudhanshu_ch02_all_content": {
-      "button_label": "Ch-02 : Redox Reaction",
+    "pchem_sudhanshu_ch01_pdfs": {
+      "button_label": "Ch-01 : Some Basic Concept of Chemistry - PDFs",
+      "private_channel_id": "https://t.me/+tm4Aeo2ldy4wOGNl",
+      "messages_identifier": "pdf"
+    },
+    "pchem_sudhanshu_ch02_videos": {
+      "button_label": "Ch-02 : Redox Reaction - Videos",
       "private_channel_id": "https://t.me/+P1RIEN0y67czODk1",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "pchem_sudhanshu_ch03_all_content": {
-      "button_label": "Ch-03 : Solutions",
+    "pchem_sudhanshu_ch02_pdfs": {
+      "button_label": "Ch-02 : Redox Reaction - PDFs",
+      "private_channel_id": "https://t.me/+r39p8qkXTRQ5MTI1",
+      "messages_identifier": "pdf"
+    },
+    "pchem_sudhanshu_ch03_videos": {
+      "button_label": "Ch-03 : Solutions - Videos",
       "private_channel_id": "https://t.me/+XxPLdKhd2HdmYTk9",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
     },
-    "pchem_sudhanshu_ch04_all_content": {
-      "button_label": "Ch-04 : Thermodynamics and Thermochemistry",
+    "pchem_sudhanshu_ch03_pdfs": {
+      "button_label": "Ch-03 : Solutions - PDFs",
+      "private_channel_id": "https://t.me/+p3cZTEeTOyA3ZjNl",
+      "messages_identifier": "pdf"
+    },
+    "pchem_sudhanshu_ch04_videos": {
+      "button_label": "Ch-04 : Thermodynamics and Thermochemistry - Videos",
       "private_channel_id": "https://t.me/+ux-XcTGpqHtkNjI1",
-      "messages_identifier": "__FETCH_EVERYTHING__"
+      "messages_identifier": "Lec"
+    },
+    "pchem_sudhanshu_ch04_pdfs": {
+      "button_label": "Ch-04 : Thermodynamics and Thermochemistry - PDFs",
+      "private_channel_id": "https://t.me/+cgC8ONylVoo3NGNl",
+      "messages_identifier": "pdf"
     }
   }
 }
