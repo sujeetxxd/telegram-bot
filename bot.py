@@ -9,7 +9,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 from telegram.error import TelegramError
 
 # --- Configuration ---
-BOT_TOKEN = "7581711594:AAEFEfbrt-2t5NBd_E-cdQMlMYzFF1mwmZI"  # Your Bot Token
+BOT_TOKEN = "7078411318:AAHmYd4LAvDkV7rwRlPRxf5sVCYGnI4e8Hc"  # Your Bot Token
 XERCESE_USER_ID = 7867584782      # Your (Xercese) User ID
 CONFIG_FILE = 'bot_config.json' # Updated config file name
 BOT_APP_CONFIG = {}             # Global variable to hold the loaded config
@@ -49,20 +49,38 @@ def generate_keyboard_for_menu(menu_id: str) -> InlineKeyboardMarkup:
         keyboard.append([InlineKeyboardButton(item["button_label"], callback_data=item["callback_data"])])
     return InlineKeyboardMarkup(keyboard)
 
-# --- Start Command ---
+# --- Start Command (MODIFIED) ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
-    logger.info(f"User {user.username} (ID: {user.id}) started the bot.")
-    
+    chat_id = update.effective_chat.id
+    logger.info(f"User {user.username} (ID: {user.id}) started the bot in chat {chat_id}.")
+
+    # Tidiness: Delete the previous menu message if it exists
+    if 'menu_message_id' in context.chat_data:
+        try:
+            await context.bot.delete_message(chat_id=chat_id, message_id=context.chat_data['menu_message_id'])
+            logger.info(f"Deleted old menu message {context.chat_data['menu_message_id']} for chat {chat_id}.")
+        except TelegramError as e:
+            # Message might have been deleted by the user already, which is fine.
+            logger.warning(f"Could not delete old menu message {context.chat_data['menu_message_id']} for chat {chat_id}: {e}")
+        finally:
+            # Always remove the key to prevent trying to delete a non-existent message again.
+            del context.chat_data['menu_message_id']
+
     if not BOT_APP_CONFIG or 'root' not in BOT_APP_CONFIG.get('menus', {}):
         await update.message.reply_text("Bot configuration is incomplete or the main menu is missing. Please contact the admin.")
         return
 
     keyboard = generate_keyboard_for_menu("root")
-    await update.message.reply_html(
+    # Send the new menu and store its ID for future cleanup
+    menu_message = await update.message.reply_html(
         rf"Hi {user.mention_html()}! Please choose an option:",
         reply_markup=keyboard
     )
+    # Store the new message_id in chat_data for this specific chat
+    context.chat_data['menu_message_id'] = menu_message.message_id
+    logger.info(f"Sent and stored new menu message ID {menu_message.message_id} for chat {chat_id}.")
+
 
 # --- Button Handler ---
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -101,12 +119,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 reply_markup=new_keyboard,
                 parse_mode='HTML'
             )
+            # The message ID doesn't change on edit, so our tracked 'menu_message_id' is still valid.
         except TelegramError as e:
             if "Message is not modified" in str(e):
                 logger.info(f"Message not modified for navigation to {key}, likely same menu or no change.")
             else:
                 logger.error(f"Error editing message for navigation to {key}: {e}")
                 try:
+                    # If editing fails, we might send a new message, but we won't try to manage it
+                    # to keep complexity low, as this is a rare edge case. The /start command will
+                    # still clean up the last known primary menu.
                     await context.bot.send_message(chat_id=end_user_chat_id, text=f"Opened {menu_display_name}.", reply_markup=new_keyboard)
                 except TelegramError as send_e: # Log if sending new message also fails
                     logger.error(f"Also failed to send new message for navigation: {send_e}")
@@ -131,6 +153,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             return
         
         try:
+            # Editing the message to show status. The 'menu_message_id' is still valid for this message.
             await query.edit_message_text(text=f"Checking...")
         except TelegramError as e: 
             logger.warning(f"Could not edit message for request status, sending new one: {e}")
@@ -180,6 +203,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                      user_facing_message = f"⚠️ Error processing request: {output_to_show[:300]}"
             
             try:
+                # The final status is edited into the original menu message.
                 await query.edit_message_text(text=user_facing_message)
             except TelegramError:
                 await context.bot.send_message(chat_id=end_user_chat_id, text=user_facing_message)
